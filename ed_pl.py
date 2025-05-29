@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
@@ -123,7 +122,7 @@ class TashkeelModel(pl.LightningModule):
 
 
     @torch.no_grad()
-    def do_tashkeel_batch(self, texts, batch_size=16, verbose=True):
+    def do_tashkeel_batch(self, texts, batch_size=16, verbose=True, confidence_threshold=0.95):
         self.eval()
         device = next(self.parameters()).device
         text_with_tashkeel = []
@@ -150,10 +149,12 @@ class TashkeelModel(pl.LightningModule):
                            self.transformer.make_no_peak_mask(trg, trg).to(device)
 
                 preds = self.transformer.decoder(trg, enc_src, trg_mask, src_trg_mask)
-                # IMPORTANT NOTE: the following code snippet is to FORCE the prediction of the input space char to output no_tashkeel tag '<NT>'
-                target_ids = torch.cat([target_ids, preds[:, -1].argmax(1).unsqueeze(1)], axis=1)
+                probs = torch.softmax(preds[:, -1, :], dim=-1)
+                max_probs, max_indices = probs.max(dim=-1)
+                # Apply confidence threshold: if below, set to <NT>
+                confident_indices = torch.where(max_probs >= confidence_threshold, max_indices, torch.tensor(self.tokenizer.tashkeel_map[self.tokenizer.no_tashkeel_tag], device=device))
+                target_ids = torch.cat([target_ids, confident_indices.unsqueeze(1)], axis=1)
                 target_ids[self.tokenizer.letters_map[' '] == src[:, :target_ids.shape[1]]] = self.tokenizer.tashkeel_map[self.tokenizer.no_tashkeel_tag]
-#                target_ids = torch.cat([target_ids, preds[:, -1].argmax(1).unsqueeze(1)], axis=1)
             text_with_tashkeel_mini = self.tokenizer.decode(src, target_ids)
             text_with_tashkeel += text_with_tashkeel_mini
         return text_with_tashkeel

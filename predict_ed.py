@@ -1,4 +1,3 @@
-
 import torch
 from ed_pl import TashkeelModel
 from tashkeel_tokenizer import TashkeelTokenizer
@@ -25,7 +24,7 @@ x = ['وقالت مجلة نيوزويك الأمريكية التحديث ال�
 x = [remove_non_arabic(i) for i in x]
 batch_size = 16
 verbose = True
-x_tashkeel = model.do_tashkeel_batch(x, batch_size, verbose)
+x_tashkeel = model.do_tashkeel_batch(x, batch_size, verbose, confidence_threshold=0.95)
 
 print(x)
 print('-'*85)
