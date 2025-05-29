@@ -4,6 +4,7 @@ from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.callbacks.progress import TQDMProgressBar
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from tashkeel_dataset import TashkeelDataset, PrePaddingDataLoader
 from tashkeel_tokenizer import TashkeelTokenizer
 
@@ -71,6 +72,14 @@ checkpoint_callback = ModelCheckpoint(dirpath=dirpath, save_top_k=10, save_last=
                                       monitor='val_der',
                                       filename=f'catt_{model_type}_model' + '-{epoch:02d}-{val_loss:.5f}-{val_der:.5f}')
 
+# Add EarlyStopping callback
+early_stop_callback = EarlyStopping(
+    monitor='val_loss',
+    patience=5,
+    verbose=True,
+    mode='min'
+)
+
 print('Creating Trainer...')
 
 logs_path = f'{dirpath}/logs'
@@ -84,7 +93,7 @@ trainer = Trainer(
     accelerator="cuda",
     devices=-1,
     max_epochs=300,
-    callbacks=[TQDMProgressBar(refresh_rate=1), checkpoint_callback],
+    callbacks=[TQDMProgressBar(refresh_rate=1), checkpoint_callback, early_stop_callback],
     logger=CSVLogger(save_dir=logs_path),
 #    strategy="ddp_find_unused_parameters_false"
     )
