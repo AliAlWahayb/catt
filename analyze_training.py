@@ -85,6 +85,14 @@ def auto_val_analysis():
             all_classes = sorted(list(set(true_labels + pred_labels)))
             plot_confusion_matrix(true_labels, pred_labels, class_names=all_classes)
             per_class_der(true_labels, pred_labels, class_names=all_classes)
+            # Error analysis: save mispredicted samples
+            mispred_path = f"error_analysis_{os.path.basename(pred_file).replace('.txt','')}_vs_{os.path.basename(gt_file).replace('.txt','')}.tsv"
+            with open(mispred_path, 'w', encoding='utf-8') as fout:
+                fout.write('idx\tground_truth\tprediction\n')
+                for idx, (gt_line, pred_line) in enumerate(zip(gt, pred)):
+                    if gt_line != pred_line:
+                        fout.write(f'{idx}\t{gt_line}\t{pred_line}\n')
+            print(f'Mispredicted samples saved to: {mispred_path}')
 
 if __name__ == '__main__':
     # 1. Plot training/validation curves
