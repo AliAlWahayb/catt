@@ -8,6 +8,8 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from tashkeel_dataset import TashkeelDataset, PrePaddingDataLoader
 from tashkeel_tokenizer import TashkeelTokenizer
 import os
+from pytorch_lightning.callbacks import Callback
+from pytorch_lightning.utilities.rank_zero import rank_zero_info
 
 def freeze(model):
     for param in model.parameters():
@@ -81,6 +83,13 @@ early_stop_callback = EarlyStopping(
     mode='min'
 )
 
+class PrintStatsCallback(Callback):
+    def on_validation_end(self, trainer, pl_module):
+        metrics = trainer.callback_metrics
+        msg = f"Epoch {trainer.current_epoch} | "
+        msg += ' | '.join([f"{k}: {v:.4f}" for k, v in metrics.items() if isinstance(v, float)])
+        rank_zero_info(msg)
+
 print('Creating Trainer...')
 
 logs_path = f'{dirpath}/logs'
@@ -94,7 +103,7 @@ trainer = Trainer(
     accelerator="cuda",
     devices=-1,
     max_epochs=300,
-    callbacks=[TQDMProgressBar(refresh_rate=1), checkpoint_callback, early_stop_callback],
+    callbacks=[TQDMProgressBar(refresh_rate=1), checkpoint_callback, early_stop_callback, PrintStatsCallback()],
     logger=CSVLogger(save_dir=logs_path),
 #    strategy="ddp_find_unused_parameters_false"
     )
