@@ -85,13 +85,24 @@ def auto_val_analysis():
             all_classes = sorted(list(set(true_labels + pred_labels)))
             plot_confusion_matrix(true_labels, pred_labels, class_names=all_classes)
             per_class_der(true_labels, pred_labels, class_names=all_classes)
-            # Error analysis: save mispredicted samples
+            # Error analysis: save mispredicted samples (line and char level)
             mispred_path = f"error_analysis_{os.path.basename(pred_file).replace('.txt','')}_vs_{os.path.basename(gt_file).replace('.txt','')}.tsv"
             with open(mispred_path, 'w', encoding='utf-8') as fout:
-                fout.write('idx\tground_truth\tprediction\n')
+                fout.write('idx\tground_truth\tprediction\tchar_errors\n')
                 for idx, (gt_line, pred_line) in enumerate(zip(gt, pred)):
                     if gt_line != pred_line:
-                        fout.write(f'{idx}\t{gt_line}\t{pred_line}\n')
+                        # Find character-level mismatches
+                        char_errors = []
+                        min_len = min(len(gt_line), len(pred_line))
+                        for i in range(min_len):
+                            if gt_line[i] != pred_line[i]:
+                                char_errors.append(f'{i}:{gt_line[i]}!={pred_line[i]}')
+                        # If lengths differ, note extra chars
+                        if len(gt_line) > min_len:
+                            char_errors.append(f'{min_len}:gt_extra:{gt_line[min_len:]})')
+                        if len(pred_line) > min_len:
+                            char_errors.append(f'{min_len}:pred_extra:{pred_line[min_len:]})')
+                        fout.write(f'{idx}\t{gt_line}\t{pred_line}\t{"; ".join(char_errors)}\n')
             print(f'Mispredicted samples saved to: {mispred_path}')
 
 if __name__ == '__main__':

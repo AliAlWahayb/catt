@@ -124,3 +124,15 @@ else:
 
 # Automatically run analytics after training
 os.system('python analyze_training.py')
+
+# Automatically export to ONNX and TorchScript after training
+from sys import executable
+import subprocess
+model_type_str = 'ed' if model_type == 'ed' else 'eo'
+ckpt_path = os.path.join(dirpath, 'last.ckpt')
+output_prefix = os.path.join(dirpath, f'exported_{model_type_str}')
+if os.path.exists(ckpt_path):
+    print(f'Exporting model to ONNX and TorchScript: {ckpt_path}')
+    subprocess.run([executable, 'export_model.py', model_type_str, ckpt_path, output_prefix])
+else:
+    print('No last.ckpt found for export.')
