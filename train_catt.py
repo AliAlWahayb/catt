@@ -7,6 +7,7 @@ from pytorch_lightning.loggers import CSVLogger
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from tashkeel_dataset import TashkeelDataset, PrePaddingDataLoader
 from tashkeel_tokenizer import TashkeelTokenizer
+import os
 
 def freeze(model):
     for param in model.parameters():
@@ -98,6 +99,16 @@ trainer = Trainer(
 #    strategy="ddp_find_unused_parameters_false"
     )
 
+# Find last checkpoint if exists
+last_ckpt = None
+ckpt_dir = os.path.join(dirpath, 'last.ckpt')
+if os.path.exists(ckpt_dir):
+    last_ckpt = ckpt_dir
+
 #ckpt_path = 'YOUR_CKPT_PATH_GOES_HERE'
 #trainer.fit(model, train_dataloader, val_dataloader, ckpt_path=ckpt_path)
-trainer.fit(model, train_dataloader, val_dataloader)
+if last_ckpt:
+    print(f"Resuming from last checkpoint: {last_ckpt}")
+    trainer.fit(model, train_dataloader, val_dataloader, ckpt_path=last_ckpt)
+else:
+    trainer.fit(model, train_dataloader, val_dataloader)
