@@ -112,3 +112,6 @@ if last_ckpt:
     trainer.fit(model, train_dataloader, val_dataloader, ckpt_path=last_ckpt)
 else:
     trainer.fit(model, train_dataloader, val_dataloader)
+
+# Automatically run analytics after training
+os.system('python analyze_training.py')
