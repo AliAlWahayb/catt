@@ -1,5 +1,3 @@
-
-
 import re
 import bw2ar
 import torch
@@ -53,9 +51,23 @@ class TashkeelTokenizer:
 
 
     def clean_text(self, text):
-        text = re.sub(u'[%s]' % u'\u0640', '', text) # strip tatweel
+        if not isinstance(text, str):
+            return ''
+        text = text.strip()
+        # Normalize: replace 'ٱ' with 'ا'
         text = text.replace('ٱ', 'ا')
-        return ' '.join(re.sub(u"[^\u0621-\u063A\u0640-\u0652\u0670\u0671\ufefb\ufef7\ufef5\ufef9 ]", " ", text,  flags=re.UNICODE).split())
+        # Remove Tatweel character (U+0640)
+        text = text.replace('\u0640', '')
+        # Remove all non-Arabic, non-diacritic, non-space characters
+        text = ' '.join(re.sub(u"[^\u0621-\u063A\u0640-\u0652\u0670\u0671\ufefb\ufef7\ufef5\ufef9 ]", " ", text,  flags=re.UNICODE).split())
+        # Check for too short, empty, or no harakat
+        if len(text) < 5:
+            return ''  # too short
+        if text.strip() == '':
+            return ''  # empty
+        if not re.search(r'[\u064b-\u0652]', text):
+            return ''  # no harakat
+        return text
 
 
     def check_match(self, text_with_tashkeel, letter_n_tashkeel_pairs):
