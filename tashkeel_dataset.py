@@ -28,7 +28,7 @@ class TashkeelDataset(Dataset):
         self.tokenizer = tokenizer
         prepared_lines = []
         for filepath in tqdm(get_files(txt_folder_path, '*.txt')):
-            with open(filepath) as f1:
+            with open(filepath, encoding='utf-8') as f1:
                 for line in f1:
                     # filter out all chars that ARE NOT arabic chars or tashkeel
                     clean_line = self.tokenizer.clean_text(line)

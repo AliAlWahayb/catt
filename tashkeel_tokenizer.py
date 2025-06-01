@@ -63,8 +63,6 @@ class TashkeelTokenizer:
         # Check for too short, empty, or no harakat
         if len(text) < 5:
             return ''  # too short
-        if text.strip() == '':
-            return ''  # empty
         if not re.search(r'[\u064b-\u0652]', text):
             return ''  # no harakat
         return text

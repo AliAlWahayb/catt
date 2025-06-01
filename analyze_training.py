@@ -31,6 +31,14 @@ def plot_training_curves(logs_dir=LOGS_DIR):
 
 # 2. Show confusion matrix (requires true/pred labels)
 def plot_confusion_matrix(true_labels, pred_labels, class_names=None):
+    # Check for length mismatch and print informative error
+    if len(true_labels) != len(pred_labels):
+        print(f"Error: true_labels and pred_labels have different lengths!")
+        print(f"true_labels: {len(true_labels)}, pred_labels: {len(pred_labels)})")
+        # Optionally, print a sample of the data for debugging
+        print(f"First 10 true_labels: {true_labels[:10]}")
+        print(f"First 10 pred_labels: {pred_labels[:10]}")
+        raise ValueError(f"Found input variables with inconsistent numbers of samples: {[len(true_labels), len(pred_labels)]}")
     cm = confusion_matrix(true_labels, pred_labels)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
     disp.plot(cmap=plt.cm.Blues)
